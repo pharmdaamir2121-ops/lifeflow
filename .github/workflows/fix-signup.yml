@@ -1,7 +1,9 @@
 name: Fix LifeFlow signup handler
 
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/fix-signup.yml"
 
 permissions:
   contents: write
