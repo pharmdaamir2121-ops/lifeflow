@@ -1,0 +1,33 @@
+name: Fix LifeFlow schema compatibility
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/fix-schema-compat.yml"
+      - ".github/schema-compat-trigger"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch app
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("app/index.html")
+          s=p.read_text()
+          s=s.replace("'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>'+x.streak+'</b></div>'", "'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>Habit</b></div>'")
+          s=s.replace("'<div class="row"><span>'+esc(x.name)+'</span><b>'+x.progress+'%</b></div>'", "'<div class="row"><span>'+esc(x.name)+'</span><b>Goal</b></div>'")
+          p.write_text(s)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Fix schema-compatible goal and habit rendering"
+          git push
