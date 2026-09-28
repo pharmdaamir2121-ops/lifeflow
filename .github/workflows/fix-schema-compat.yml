@@ -15,23 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch app
+      - name: Patch app authentication and schema compatibility
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path("app/index.html")
           s=p.read_text()
-          s=s.replace("'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>'+x.streak+'</b></div>'", "'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>Habit</b></div>'")
-          s=s.replace("'<div class="row"><span>'+esc(x.name)+'</span><b>'+x.progress+'%</b></div>'", "'<div class="row"><span>'+esc(x.name)+'</span><b>Goal</b></div>'")
-          s=s.replace("async function get(t){let{data:d,error}=await db.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false});return error?[]:d||[]}", "async function get(t){let{data:d,error}=await db.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(error){console.error(t,error);return []}return d||[]}")
-          s=s.replace("await db.from('tasks').insert({user_id:user.id,title:v});$('task').value='';load()", "let{error}=await db.from('tasks').insert({user_id:user.id,title:v});if(error)return alert('Task error: '+error.message);$('task').value='';load()")
-          s=s.replace("await db.from('goals').insert({user_id:user.id,name});$('goal').value='';load()", "let{error}=await db.from('goals').insert({user_id:user.id,name});if(error)return alert('Goal error: '+error.message);$('goal').value='';load()")
-          s=s.replace("await db.from('habits').insert({user_id:user.id,name});$('habit').value='';load()", "let{error}=await db.from('habits').insert({user_id:user.id,name});if(error)return alert('Habit error: '+error.message);$('habit').value='';load()")
+          old_login="""async function login(){let{data:d,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});if(error)return msg(error.message);user=d.user;await boot()}"""
+          new_login="""async function login(){try{let email=$('email').value.trim(),password=$('pass').value;if(!email||!password)return msg('Enter your email and password.');msg('Signing in...');let{data:d,error}=await db.auth.signInWithPassword({email,password});if(error)return msg('Sign-in error: '+error.message);if(!d?.user)return msg('Sign-in did not return a user. Please try again.');user=d.user;msg('Signed in successfully.');await boot()}catch(e){msg('Sign-in error: '+(e?.message||'Please try again.'))}}"""
+          s=s.replace(old_login,new_login)
+          old_boot="""async function boot(){let{data:d}=await db.auth.getSession();user=d.session?.user||user;if(!user){$('auth').style.display='grid';return}$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';await load()}db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(user)boot()});boot();"""
+          new_boot="""async function boot(){try{let{data:d,error}=await db.auth.getSession();if(error)return msg('Session error: '+error.message);user=d.session?.user||user;if(!user){$('auth').style.display='grid';$('app').style.display='none';return}$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';await load()}catch(e){msg('App error: '+(e?.message||'Please refresh and try again.'))}}db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(user){$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';load()}});boot();"""
+          s=s.replace(old_boot,new_boot)
+          s=s.replace("x.progress+'%'", "'Goal'")
+          s=s.replace("x.streak", "'Habit'")
           p.write_text(s)
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Fix LifeFlow schema compatibility and errors"
+          git commit -m "Fix LifeFlow sign-in handling"
           git push
