@@ -23,11 +23,15 @@ jobs:
           s=p.read_text()
           s=s.replace("'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>'+x.streak+'</b></div>'", "'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>Habit</b></div>'")
           s=s.replace("'<div class="row"><span>'+esc(x.name)+'</span><b>'+x.progress+'%</b></div>'", "'<div class="row"><span>'+esc(x.name)+'</span><b>Goal</b></div>'")
+          s=s.replace("async function get(t){let{data:d,error}=await db.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false});return error?[]:d||[]}", "async function get(t){let{data:d,error}=await db.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(error){console.error(t,error);return []}return d||[]}")
+          s=s.replace("await db.from('tasks').insert({user_id:user.id,title:v});$('task').value='';load()", "let{error}=await db.from('tasks').insert({user_id:user.id,title:v});if(error)return alert('Task error: '+error.message);$('task').value='';load()")
+          s=s.replace("await db.from('goals').insert({user_id:user.id,name});$('goal').value='';load()", "let{error}=await db.from('goals').insert({user_id:user.id,name});if(error)return alert('Goal error: '+error.message);$('goal').value='';load()")
+          s=s.replace("await db.from('habits').insert({user_id:user.id,name});$('habit').value='';load()", "let{error}=await db.from('habits').insert({user_id:user.id,name});if(error)return alert('Habit error: '+error.message);$('habit').value='';load()")
           p.write_text(s)
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Fix schema-compatible goal and habit rendering"
+          git commit -m "Fix LifeFlow schema compatibility and errors"
           git push
