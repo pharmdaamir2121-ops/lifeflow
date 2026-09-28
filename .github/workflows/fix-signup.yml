@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/fix-signup.yml"
+      - ".github/signup-fix-trigger"
 
 permissions:
   contents: write
