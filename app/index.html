@@ -37,12 +37,12 @@ async function signup(){
 }
 async function logout(){if(db)await db.auth.signOut();location.reload();}
 function page(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));$(p).classList.add("on");render();}
-async function get(t){const r=await db.from(t).select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(r.error)console.error(t,r.error);return r.data||[];}
+async function get(t){const r=await db.from(t).select("*").eq("user_id",user.id);if(r.error){msg(t+" error: "+r.error.message);console.error(t,r.error);return [];}return r.data||[];}
 async function load(){[data.tasks,data.expenses,data.goals,data.habits]=await Promise.all(["tasks","expenses","goals","habits"].map(get));render();}
 async function addTask(){const v=$("task").value.trim();if(!v)return;const r=await db.from("tasks").insert({user_id:user.id,title:v});if(r.error)return msg("Task error: "+r.error.message);$("task").value="";load();}
 async function toggleTask(id,done){const r=await db.from("tasks").update({done:!done}).eq("id",id).eq("user_id",user.id);if(r.error)return msg("Task error: "+r.error.message);load();}
-async function addExpense(){const description=$("desc").value.trim(),amount=Number($("amt").value);if(!description||!amount)return;const r=await db.from("expenses").insert({user_id:user.id,description,amount});if(r.error)return msg("Expense error: "+r.error.message);$("desc").value="";$("amt").value="";load();}
-async function addGoal(){const name=$("goal").value.trim();if(!name)return;const r=await db.from("goals").insert({user_id:user.id,name});if(r.error)return msg("Goal error: "+r.error.message);$("goal").value="";load();}
+async function addExpense(){try{const description=$("desc").value.trim(),amount=Number($("amt").value);if(!description||!Number.isFinite(amount)||amount<=0){msg("Enter expense and amount.");return;}msg("Saving expense...");const r=await db.from("expenses").insert({user_id:user.id,description,amount});if(r.error){msg("Expense error: "+r.error.message);return;}msg("Expense saved.");$("desc").value="";$("amt").value="";await load();}catch(e){msg("Expense error: "+(e?.message||e));}}
+async function addGoal(){try{const name=$("goal").value.trim();if(!name){msg("Enter a goal name.");return;}msg("Saving goal...");const r=await db.from("goals").insert({user_id:user.id,name});if(r.error){msg("Goal error: "+r.error.message);return;}msg("Goal saved.");$("goal").value="";await load();}catch(e){msg("Goal error: "+(e?.message||e));}}
 async function addHabit(){const name=$("habit").value.trim();if(!name)return;const r=await db.from("habits").insert({user_id:user.id,name});if(r.error)return msg("Habit error: "+r.error.message);$("habit").value="";load();}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function render(){let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),done=data.tasks.filter(x=>x.done).length;
