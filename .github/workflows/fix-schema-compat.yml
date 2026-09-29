@@ -1,4 +1,4 @@
-name: Fix LifeFlow schema compatibility
+name: Repair LifeFlow frontend
 
 on:
   workflow_dispatch:
@@ -11,29 +11,97 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch app authentication and schema compatibility
+      - name: Replace frontend JavaScript
         run: |
           python - <<'PY'
+          import re
           from pathlib import Path
           p=Path("app/index.html")
           s=p.read_text()
-          old_login="""async function login(){let{data:d,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('pass').value});if(error)return msg(error.message);user=d.user;await boot()}"""
-          new_login="""async function login(){try{let email=$('email').value.trim(),password=$('pass').value;if(!email||!password)return msg('Enter your email and password.');msg('Signing in...');let{data:d,error}=await db.auth.signInWithPassword({email,password});if(error)return msg('Sign-in error: '+error.message);if(!d?.user)return msg('Sign-in did not return a user. Please try again.');user=d.user;msg('Signed in successfully.');await boot()}catch(e){msg('Sign-in error: '+(e?.message||'Please try again.'))}}"""
-          s=s.replace(old_login,new_login)
-          old_boot="""async function boot(){let{data:d}=await db.auth.getSession();user=d.session?.user||user;if(!user){$('auth').style.display='grid';return}$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';await load()}db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(user)boot()});boot();"""
-          new_boot="""async function boot(){try{let{data:d,error}=await db.auth.getSession();if(error)return msg('Session error: '+error.message);user=d.session?.user||user;if(!user){$('auth').style.display='grid';$('app').style.display='none';return}$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';await load()}catch(e){msg('App error: '+(e?.message||'Please refresh and try again.'))}}db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(user){$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';load()}});boot();"""
-          s=s.replace(old_boot,new_boot)
-          s=s.replace("x.progress+'%'", "'Goal'")
-          s=s.replace("x.streak", "'Habit'")
+          m=re.search(r'const URL="([^"]+)",KEY="([^"]+)"',s)
+          if not m:
+              raise SystemExit("Supabase configuration not found")
+          url,key=m.group(1),m.group(2)
+          js=f'''const SUPABASE_URL={url!r}, SUPABASE_KEY={key!r};
+          let db=null,user=null,data={{tasks:[],expenses:[],goals:[],habits:[]}};
+          const $=id=>document.getElementById(id);
+          function msg(x){{const el=$("status");if(el)el.textContent=x;}}
+          function showApp(){{ $("auth").style.display="none"; $("app").style.display="flex"; if(user)$("who").textContent=user.email||""; }}
+          function showAuth(){{ $("auth").style.display="grid"; $("app").style.display="none"; }}
+          async function login(){{
+            try{{
+              if(!db){{msg("LifeFlow is still loading. Please wait a moment.");return;}}
+              const email=$("email").value.trim(), password=$("pass").value;
+              if(!email||!password){{msg("Enter your email and password.");return;}}
+              msg("Signing in...");
+              const result=await db.auth.signInWithPassword({{email,password}});
+              if(result.error){{msg("Sign-in error: "+result.error.message);return;}}
+              user=result.data?.user||null;
+              if(!user){{msg("No user session was returned.");return;}}
+              showApp(); await load();
+            }}catch(e){{msg("Sign-in error: "+(e&&e.message?e.message:String(e)));}}
+          }}
+          async function signup(){{
+            try{{
+              const email=$("email").value.trim(),password=$("pass").value;
+              if(!email||password.length<6){{msg("Use an email and 6+ character password.");return;}}
+              msg("Creating account...");
+              const result=await db.auth.signUp({{email,password,options:{{emailRedirectTo:location.href}}}});
+              if(result.error){{msg("Signup error: "+result.error.message);return;}}
+              msg(result.data?.session?"Account created successfully.":"Account created. Check your email to confirm.");
+            }}catch(e){{msg("Signup error: "+(e&&e.message?e.message:String(e)));}}
+          }}
+          async function logout(){{if(db)await db.auth.signOut();location.reload();}}
+          function page(p){{document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));$(p).classList.add("on");render();}}
+          async function get(t){{const r=await db.from(t).select("*").eq("user_id",user.id).order("created_at",{{ascending:false}});if(r.error)console.error(t,r.error);return r.data||[];}}
+          async function load(){{[data.tasks,data.expenses,data.goals,data.habits]=await Promise.all(["tasks","expenses","goals","habits"].map(get));render();}}
+          async function addTask(){{const v=$("task").value.trim();if(!v)return;const r=await db.from("tasks").insert({{user_id:user.id,title:v}});if(r.error)return msg("Task error: "+r.error.message);$("task").value="";load();}}
+          async function toggleTask(id,done){{const r=await db.from("tasks").update({{done:!done}}).eq("id",id).eq("user_id",user.id);if(r.error)return msg("Task error: "+r.error.message);load();}}
+          async function addExpense(){{const description=$("desc").value.trim(),amount=Number($("amt").value);if(!description||!amount)return;const r=await db.from("expenses").insert({{user_id:user.id,description,amount}});if(r.error)return msg("Expense error: "+r.error.message);$("desc").value="";$("amt").value="";load();}}
+          async function addGoal(){{const name=$("goal").value.trim();if(!name)return;const r=await db.from("goals").insert({{user_id:user.id,name}});if(r.error)return msg("Goal error: "+r.error.message);$("goal").value="";load();}}
+          async function addHabit(){{const name=$("habit").value.trim();if(!name)return;const r=await db.from("habits").insert({{user_id:user.id,name}});if(r.error)return msg("Habit error: "+r.error.message);$("habit").value="";load();}}
+          function esc(s){{return String(s).replace(/[&<>"']/g,c=>({{'&':"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}}[c]));}}
+          function render(){{let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),done=data.tasks.filter(x=>x.done).length;
+            $("metrics").innerHTML=[["Tasks",data.tasks.length],["Done",done],["Spent","Rs "+spent.toLocaleString()],["Goals",data.goals.length]].map(x=>'<div class="card"><div>'+x[0]+'</div><div class="value">'+x[1]+"</div></div>").join("");
+            $("tasksList").innerHTML=data.tasks.map(x=>'<div class="row"><span style="'+(x.done?"text-decoration:line-through;color:#999":"")+'">'+esc(x.title)+'</span><button onclick="toggleTask('+x.id+','+x.done+')">'+(x.done?"Undo":"Done")+"</button></div>").join("")||"<p>No tasks yet.</p>";
+            $("today").innerHTML=$("tasksList").innerHTML;
+            $("moneyList").innerHTML=data.expenses.map(x=>'<div class="row"><span>'+esc(x.description)+'</span><b>Rs '+Number(x.amount).toLocaleString()+"</b></div>").join("")||"<p>No expenses yet.</p>";
+            $("goalsList").innerHTML=data.goals.map(x=>'<div class="row"><span>'+esc(x.name)+'</span><b>Goal</b></div>').join("")||"<p>No goals yet.</p>";
+            $("habitsList").innerHTML=data.habits.map(x=>'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>Habit</b></div>').join("")||"<p>No habits yet.</p>";
+          }}
+          async function start(){{
+            try{{
+              if(typeof supabase==="undefined"){{msg("LifeFlow could not load its authentication service. Refresh once.");return;}}
+              db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+              const r=await db.auth.getSession();
+              if(r.error){{msg("Session error: "+r.error.message);return;}}
+              user=r.data?.session?.user||null;
+              if(user){{showApp();await load();}}else showAuth();
+              db.auth.onAuthStateChange((_event,session)=>{{user=session?.user||null;if(user){{showApp();load();}}else showAuth();}});
+            }}catch(e){{msg("Startup error: "+(e&&e.message?e.message:String(e)));}}
+          }}
+          window.addEventListener("DOMContentLoaded",()=>{{
+            $("loginBtn").addEventListener("click",login);
+            $("signupBtn").addEventListener("click",signup);
+            $("logoutBtn").addEventListener("click",logout);
+            start();
+          }});
+          window.login=login; window.signup=signup; window.logout=logout; window.page=page; window.addTask=addTask; window.addExpense=addExpense; window.addGoal=addGoal; window.addHabit=addHabit; window.toggleTask=toggleTask;
+          '''
+          s=s.replace('<button class="primary" onclick="signup()">Create account</button><button onclick="login()">Sign in</button>','<button id="signupBtn" class="primary">Create account</button><button id="loginBtn">Sign in</button>')
+          s=s.replace('<button onclick="logout()">↪ Sign out</button>','<button id="logoutBtn">↪ Sign out</button>')
+          s=re.sub(r'<script>.*?</script>', '<script>'+js+'</script>', s, count=1, flags=re.S)
           p.write_text(s)
           PY
+      - name: Commit repaired frontend
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Fix LifeFlow sign-in handling"
+          git commit -m "Repair LifeFlow authentication frontend"
           git push
