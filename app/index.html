@@ -9,7 +9,7 @@
 <script>const SUPABASE_URL='https://lefwhydozfbddrpmfeyh.supabase.co', SUPABASE_KEY='sb_publishable_ZPqYcTpY6CZbrz-0yJyAJw_UWmyzRgH';
 let db=null,user=null,data={tasks:[],expenses:[],goals:[],habits:[]};
 const $=id=>document.getElementById(id);
-function msg(x){const el=$("status");if(el)el.textContent=x;}
+function msg(x){const a=$("appStatus"),s=$("status");if(a&&$("app").style.display!=="none"){a.textContent=x;a.style.display="inline-block";}else if(s)s.textContent=x;}
 function showApp(){ $("auth").style.display="none"; $("app").style.display="flex"; if(user)$("who").textContent=user.email||""; }
 function showAuth(){ $("auth").style.display="grid"; $("app").style.display="none"; }
 async function login(){
