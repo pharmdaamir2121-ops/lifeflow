@@ -1,9 +1,74 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><title>LifeFlow</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box}body{margin:0;font:15px system-ui;background:#f5f7fb;color:#111827}.auth{position:fixed;inset:0;display:grid;place-items:center;background:#f5f7fb}.box{background:#fff;padding:28px;border-radius:20px;width:min(420px,92%);box-shadow:0 20px 60px #0001}.box h1{margin-top:0}.input,button{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #ddd;font:inherit}.primary{background:#635bff;color:#fff;border-color:#635bff}.app{display:none;min-height:100vh}.side{position:fixed;inset:0 auto 0 0;width:220px;background:#0f172a;color:#fff;padding:20px}.brand{font-size:23px;font-weight:800;margin-bottom:25px}.nav button{background:none;border:0;color:#cbd5e1;text-align:left}.main{margin-left:220px;padding:28px;max-width:1300px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px}.value{font-size:28px;font-weight:800}.list{display:grid;gap:8px}.row{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e5e7eb;border-radius:11px}.row span{flex:1}.page{display:none}.page.on{display:block}.pill{display:inline-block;background:#eef2ff;padding:5px 9px;border-radius:99px;font-size:12px}@media(max-width:800px){.side{width:64px;padding:10px}.brand{font-size:0}.brand:after{content:'LF';font-size:18px}.nav button{font-size:0}.main{margin-left:64px;padding:15px}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.grid{grid-template-columns:1fr}}</style></head><body>
-<div id="auth" class="auth"><div class="box"><h1>Life<span style="color:#635bff">Flow</span></h1><p>Your daily command center.</p><input id="email" class="input" type="email" placeholder="Email"><input id="pass" class="input" type="password" placeholder="Password"><button class="primary" onclick="signup()">Create account</button><button onclick="login()">Sign in</button><p id="status" class="pill"></p></div></div>
-<div id="app" class="app"><aside class="side"><div class="brand">Life<span style="color:#8b83ff">Flow</span></div><nav class="nav"><button onclick="page('home')">🏠 Dashboard</button><button onclick="page('tasks')">✓ Tasks</button><button onclick="page('money')">💰 Money</button><button onclick="page('goals')">🎯 Goals</button><button onclick="page('habits')">🔥 Habits</button><button onclick="logout()">↪ Sign out</button></nav></aside><main class="main">
+<div id="auth" class="auth"><div class="box"><h1>Life<span style="color:#635bff">Flow</span></h1><p>Your daily command center.</p><input id="email" class="input" type="email" placeholder="Email"><input id="pass" class="input" type="password" placeholder="Password"><button id="signupBtn" class="primary">Create account</button><button id="loginBtn">Sign in</button><p id="status" class="pill"></p></div></div>
+<div id="app" class="app"><aside class="side"><div class="brand">Life<span style="color:#8b83ff">Flow</span></div><nav class="nav"><button onclick="page('home')">🏠 Dashboard</button><button onclick="page('tasks')">✓ Tasks</button><button onclick="page('money')">💰 Money</button><button onclick="page('goals')">🎯 Goals</button><button onclick="page('habits')">🔥 Habits</button><button id="logoutBtn">↪ Sign out</button></nav></aside><main class="main">
 <section id="home" class="page on"><h1>Dashboard</h1><p>Your life, in one place.</p><span id="who" class="pill"></span><div class="grid" id="metrics"></div><div class="card"><h2>Today's tasks</h2><div id="today" class="list"></div></div></section>
 <section id="tasks" class="page"><h1>Tasks</h1><div class="card"><input id="task" class="input" placeholder="What needs doing?"><button class="primary" onclick="addTask()">Add task</button><div id="tasksList" class="list"></div></div></section>
 <section id="money" class="page"><h1>Money</h1><div class="card"><input id="desc" class="input" placeholder="Expense"><input id="amt" class="input" type="number" placeholder="Amount in PKR"><button class="primary" onclick="addExpense()">Add expense</button><div id="moneyList" class="list"></div></div></section>
 <section id="goals" class="page"><h1>Goals</h1><div class="card"><input id="goal" class="input" placeholder="Goal name"><button class="primary" onclick="addGoal()">Add goal</button><div id="goalsList" class="list"></div></div></section>
 <section id="habits" class="page"><h1>Habits</h1><div class="card"><input id="habit" class="input" placeholder="Habit name"><button class="primary" onclick="addHabit()">Add habit</button><div id="habitsList" class="list"></div></div></section></main></div>
-<script>const URL="https://lefwhydozfbddrpmfeyh.supabase.co",KEY="sb_publishable_ZPqYcTpY6CZbrz-0yJyAJw_UWmyzRgH",db=supabase.createClient(URL,KEY);let user=null,data={tasks:[],expenses:[],goals:[],habits:[]};const $=id=>document.getElementById(id);function msg(x){$('status').textContent=x}async function signup(){try{let email=$('email').value.trim(),password=$('pass').value;if(!email||password.length<6)return msg('Use an email and 6+ character password.');msg('Creating account...');let{data,error}=await db.auth.signUp({email,password,options:{emailRedirectTo:location.href}});if(error)return msg('Signup error: '+error.message);msg(data.session?'Account created successfully.':'Account created. Check your email to confirm your account.')}catch(e){msg('Signup error: '+(e?.message||'Please try again.'))}}async function login(){try{let email=$('email').value.trim(),password=$('pass').value;if(!email||!password)return msg('Enter your email and password.');msg('Signing in...');let{data:d,error}=await db.auth.signInWithPassword({email,password});if(error)return msg('Sign-in error: '+error.message);if(!d?.user)return msg('Sign-in did not return a user. Please try again.');user=d.user;msg('Signed in successfully.');await boot()}catch(e){msg('Sign-in error: '+(e?.message||'Please try again.'))}}async function logout(){await db.auth.signOut();location.reload()}function page(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));$(p).classList.add('on');render()}async function get(t){let{data:d,error}=await db.from(t).select('*').eq('user_id',user.id).order('created_at',{ascending:false});return error?[]:d||[]}async function load(){[data.tasks,data.expenses,data.goals,data.habits]=await Promise.all(['tasks','expenses','goals','habits'].map(get));render()}async function addTask(){let v=$('task').value.trim();if(!v)return;await db.from('tasks').insert({user_id:user.id,title:v});$('task').value='';load()}async function toggleTask(id,done){await db.from('tasks').update({done:!done}).eq('id',id).eq('user_id',user.id);load()}async function addExpense(){let description=$('desc').value.trim(),amount=Number($('amt').value);if(!description||!amount)return;await db.from('expenses').insert({user_id:user.id,description,amount});$('desc').value='';$('amt').value='';load()}async function addGoal(){let name=$('goal').value.trim();if(!name)return;await db.from('goals').insert({user_id:user.id,name});$('goal').value='';load()}async function addHabit(){let name=$('habit').value.trim();if(!name)return;await db.from('habits').insert({user_id:user.id,name});$('habit').value='';load()}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function render(){let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),done=data.tasks.filter(x=>x.done).length;$('metrics').innerHTML=[['Tasks',data.tasks.length],['Done',done],['Spent','Rs '+spent.toLocaleString()],['Goals',data.goals.length]].map(x=>'<div class="card"><div>'+x[0]+'</div><div class="value">'+x[1]+'</div></div>').join('');$('tasksList').innerHTML=data.tasks.map(x=>'<div class="row"><span style="'+(x.done?'text-decoration:line-through;color:#999':'')+'">'+esc(x.title)+'</span><button onclick="toggleTask('+x.id+','+x.done+')">'+(x.done?'Undo':'Done')+'</button></div>').join('')||'<p>No tasks yet.</p>';$('today').innerHTML=$('tasksList').innerHTML;$('moneyList').innerHTML=data.expenses.map(x=>'<div class="row"><span>'+esc(x.description)+'</span><b>Rs '+Number(x.amount).toLocaleString()+'</b></div>').join('')||'<p>No expenses yet.</p>';$('goalsList').innerHTML=data.goals.map(x=>'<div class="row"><span>'+esc(x.name)+'</span><b>'+x.progress+'%</b></div>').join('')||'<p>No goals yet.</p>';$('habitsList').innerHTML=data.habits.map(x=>'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>'+'Habit'+'</b></div>').join('')||'<p>No habits yet.</p>'}async function boot(){try{let{data:d,error}=await db.auth.getSession();if(error)return msg('Session error: '+error.message);user=d.session?.user||user;if(!user){$('auth').style.display='grid';$('app').style.display='none';return}$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';await load()}catch(e){msg('App error: '+(e?.message||'Please refresh and try again.'))}}db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(user){$('auth').style.display='none';$('app').style.display='flex';$('who').textContent=user.email||'';load()}});boot();</script></body></html>
+<script>const SUPABASE_URL='https://lefwhydozfbddrpmfeyh.supabase.co', SUPABASE_KEY='sb_publishable_ZPqYcTpY6CZbrz-0yJyAJw_UWmyzRgH';
+let db=null,user=null,data={tasks:[],expenses:[],goals:[],habits:[]};
+const $=id=>document.getElementById(id);
+function msg(x){const el=$("status");if(el)el.textContent=x;}
+function showApp(){ $("auth").style.display="none"; $("app").style.display="flex"; if(user)$("who").textContent=user.email||""; }
+function showAuth(){ $("auth").style.display="grid"; $("app").style.display="none"; }
+async function login(){
+  try{
+    if(!db){msg("LifeFlow is still loading. Please wait a moment.");return;}
+    const email=$("email").value.trim(), password=$("pass").value;
+    if(!email||!password){msg("Enter your email and password.");return;}
+    msg("Signing in...");
+    const result=await db.auth.signInWithPassword({email,password});
+    if(result.error){msg("Sign-in error: "+result.error.message);return;}
+    user=result.data?.user||null;
+    if(!user){msg("No user session was returned.");return;}
+    showApp(); await load();
+  }catch(e){msg("Sign-in error: "+(e&&e.message?e.message:String(e)));}
+}
+async function signup(){
+  try{
+    const email=$("email").value.trim(),password=$("pass").value;
+    if(!email||password.length<6){msg("Use an email and 6+ character password.");return;}
+    msg("Creating account...");
+    const result=await db.auth.signUp({email,password,options:{emailRedirectTo:location.href}});
+    if(result.error){msg("Signup error: "+result.error.message);return;}
+    msg(result.data?.session?"Account created successfully.":"Account created. Check your email to confirm.");
+  }catch(e){msg("Signup error: "+(e&&e.message?e.message:String(e)));}
+}
+async function logout(){if(db)await db.auth.signOut();location.reload();}
+function page(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));$(p).classList.add("on");render();}
+async function get(t){const r=await db.from(t).select("*").eq("user_id",user.id).order("created_at",{ascending:false});if(r.error)console.error(t,r.error);return r.data||[];}
+async function load(){[data.tasks,data.expenses,data.goals,data.habits]=await Promise.all(["tasks","expenses","goals","habits"].map(get));render();}
+async function addTask(){const v=$("task").value.trim();if(!v)return;const r=await db.from("tasks").insert({user_id:user.id,title:v});if(r.error)return msg("Task error: "+r.error.message);$("task").value="";load();}
+async function toggleTask(id,done){const r=await db.from("tasks").update({done:!done}).eq("id",id).eq("user_id",user.id);if(r.error)return msg("Task error: "+r.error.message);load();}
+async function addExpense(){const description=$("desc").value.trim(),amount=Number($("amt").value);if(!description||!amount)return;const r=await db.from("expenses").insert({user_id:user.id,description,amount});if(r.error)return msg("Expense error: "+r.error.message);$("desc").value="";$("amt").value="";load();}
+async function addGoal(){const name=$("goal").value.trim();if(!name)return;const r=await db.from("goals").insert({user_id:user.id,name});if(r.error)return msg("Goal error: "+r.error.message);$("goal").value="";load();}
+async function addHabit(){const name=$("habit").value.trim();if(!name)return;const r=await db.from("habits").insert({user_id:user.id,name});if(r.error)return msg("Habit error: "+r.error.message);$("habit").value="";load();}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),done=data.tasks.filter(x=>x.done).length;
+  $("metrics").innerHTML=[["Tasks",data.tasks.length],["Done",done],["Spent","Rs "+spent.toLocaleString()],["Goals",data.goals.length]].map(x=>'<div class="card"><div>'+x[0]+'</div><div class="value">'+x[1]+"</div></div>").join("");
+  $("tasksList").innerHTML=data.tasks.map(x=>'<div class="row"><span style="'+(x.done?"text-decoration:line-through;color:#999":"")+'">'+esc(x.title)+'</span><button onclick="toggleTask('+x.id+','+x.done+')">'+(x.done?"Undo":"Done")+"</button></div>").join("")||"<p>No tasks yet.</p>";
+  $("today").innerHTML=$("tasksList").innerHTML;
+  $("moneyList").innerHTML=data.expenses.map(x=>'<div class="row"><span>'+esc(x.description)+'</span><b>Rs '+Number(x.amount).toLocaleString()+"</b></div>").join("")||"<p>No expenses yet.</p>";
+  $("goalsList").innerHTML=data.goals.map(x=>'<div class="row"><span>'+esc(x.name)+'</span><b>Goal</b></div>').join("")||"<p>No goals yet.</p>";
+  $("habitsList").innerHTML=data.habits.map(x=>'<div class="row"><span>🔥 '+esc(x.name)+'</span><b>Habit</b></div>').join("")||"<p>No habits yet.</p>";
+}
+async function start(){
+  try{
+    if(typeof supabase==="undefined"){msg("LifeFlow could not load its authentication service. Refresh once.");return;}
+    db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const r=await db.auth.getSession();
+    if(r.error){msg("Session error: "+r.error.message);return;}
+    user=r.data?.session?.user||null;
+    if(user){showApp();await load();}else showAuth();
+    db.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;if(user){showApp();load();}else showAuth();});
+  }catch(e){msg("Startup error: "+(e&&e.message?e.message:String(e)));}
+}
+window.addEventListener("DOMContentLoaded",()=>{
+  $("loginBtn").addEventListener("click",login);
+  $("signupBtn").addEventListener("click",signup);
+  $("logoutBtn").addEventListener("click",logout);
+  start();
+});
+window.login=login; window.signup=signup; window.logout=logout; window.page=page; window.addTask=addTask; window.addExpense=addExpense; window.addGoal=addGoal; window.addHabit=addHabit; window.toggleTask=toggleTask;
+</script></body></html>
