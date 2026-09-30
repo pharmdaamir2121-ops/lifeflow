@@ -71,16 +71,23 @@ function coach(){
  else advice.push("🔥 Keep your "+habits+" habit"+(habits===1?"":"s")+" visible and focus on consistency.");
  $("coachAnswer").innerHTML=advice.map(x=>"<p>"+x+"</p>").join("");
 }
-function askCoach(){
- const q=$("coachInput").value.trim().toLowerCase();
+async function askCoach(){
+ const q=$("coachInput").value.trim();
  if(!q)return;
- const pending=data.tasks.filter(x=>!x.done), spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0);
+ $("coachReply").innerHTML="<p>Thinking…</p>";
+ try{
+  if(db){
+   const r=await db.functions.invoke("lifeflow-ai",{body:{message:q,context:{tasks:data.tasks,expenses:data.expenses,goals:data.goals,habits:data.habits}}});
+   if(!r.error&&r.data?.answer){$("coachReply").innerHTML="<p>"+esc(r.data.answer).replace(/\n/g,"<br>")+"</p>";return;}
+  }
+ }catch(e){}
+ const ql=q.toLowerCase(),pending=data.tasks.filter(x=>!x.done),spent=data.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
  let r;
- if(q.includes("task")||q.includes("today")||q.includes("focus")) r=pending.length?"Start with: <b>"+esc(pending[0].title)+"</b>. Then complete the next important task.":"You are clear on tasks. Use today to make progress on a goal.";
- else if(q.includes("money")||q.includes("spend")||q.includes("expense")) r="You have recorded <b>Rs "+spent.toLocaleString()+"</b> so far. Keep entering expenses consistently; later we can add budgets and trends.";
- else if(q.includes("goal")) r=data.goals.length?"You have <b>"+data.goals.length+"</b> goal"+(data.goals.length===1?"":"s")+". Pick one and define the smallest action you can complete today.":"You have no goals yet. Add one concrete goal to give your tasks direction.";
- else if(q.includes("habit")) r=data.habits.length?"You have <b>"+data.habits.length+"</b> habit"+(data.habits.length===1?"":"s")+". Focus on repeating them rather than adding too many at once.":"Start with one habit that takes less than 10 minutes.";
- else r="I can help you focus on <b>tasks, money, goals, or habits</b>. Try asking: “What should I focus on today?”";
+ if(ql.includes("task")||ql.includes("today")||ql.includes("focus")) r=pending.length?"Start with: <b>"+esc(pending[0].title||pending[0].name||"your next task")+"</b>. Then complete the next important task.":"You are clear on tasks. Use today to make progress on a goal.";
+ else if(ql.includes("money")||ql.includes("spend")||ql.includes("expense")) r="You have recorded <b>Rs "+spent.toLocaleString()+"</b> so far. Keep entering expenses consistently.";
+ else if(ql.includes("goal")) r=data.goals.length?"You have <b>"+data.goals.length+"</b> goal"+(data.goals.length===1?"":"s")+". Pick one and define the smallest action you can complete today.":"You have no goals yet. Add one concrete goal.";
+ else if(ql.includes("habit")) r=data.habits.length?"You have <b>"+data.habits.length+"</b> habit"+(data.habits.length===1?"":"s")+". Focus on repeating them consistently.":"Start with one habit that takes less than 10 minutes.";
+ else r="I can help with tasks, money, goals, or habits. Try asking: “What should I focus on today?”";
  $("coachReply").innerHTML="<p>"+r+"</p>";
 }
 function render(){let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),done=data.tasks.filter(x=>x.done).length,pending=data.tasks.length-done;
