@@ -1,0 +1,5 @@
+[functions.lifeflow-billing]
+verify_jwt = false
+
+[functions.lifeflow-ai]
+verify_jwt = true
