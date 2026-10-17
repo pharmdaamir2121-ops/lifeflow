@@ -20,9 +20,9 @@ Deno.serve(async (req) => {
   const webhookSecret = Deno.env.get("POLAR_WEBHOOK_SECRET");
   const serviceKey = Deno.env.get("LIFEFLOW_SERVICE_ROLE_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const expectedProductId = Deno.env.get("POLAR_PRODUCT_ID");
+  const expectedProductId = "2bf38fc1-3ad8-489b-aa7b-c2166a2fb372";
 
-  if (!webhookSecret || !serviceKey || !supabaseUrl || !expectedProductId) {
+  if (!webhookSecret || !serviceKey || !supabaseUrl) {
     return json({ error: "Polar webhook is not fully configured." }, 503);
   }
 
