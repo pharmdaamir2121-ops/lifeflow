@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       || Deno.env.get("SUPABASE_ANON_KEY")
       || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
     const polarToken = Deno.env.get("POLAR_ACCESS_TOKEN");
-    const productId = Deno.env.get("POLAR_PRODUCT_ID");
+    const productId = "2bf38fc1-3ad8-489b-aa7b-c2166a2fb372";
 
     if (!supabaseUrl || !publicKey || !polarToken || !productId) {
       return json({ error: "Polar checkout is not fully configured yet." }, 503);
