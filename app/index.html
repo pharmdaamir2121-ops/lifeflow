@@ -47,10 +47,23 @@ function addReminder(){const text=$("reminderText").value.trim(),time=$("reminde
 function deleteReminder(id){saveReminders(getReminders().filter(x=>x.id!==id));renderReminders();}
 function renderReminders(){const r=getReminders().sort((a,b)=>new Date(a.time)-new Date(b.time));$("reminderList").innerHTML=r.map(x=>"<div class=\"row\"><span><b>"+esc(x.text)+"</b><br><small>"+new Date(x.time).toLocaleString()+"</small></span><button onclick=\"deleteReminder("+x.id+")\">Delete</button></div>").join("")||"<p>No reminders yet.</p>";}
 function checkReminders(){const now=Date.now(),r=getReminders();let changed=false;r.forEach(x=>{if(!x.done&&new Date(x.time).getTime()<=now){x.done=true;changed=true;if("Notification" in window&&Notification.permission==="granted")new Notification("LifeFlow Reminder",{body:x.text});}});if(changed){saveReminders(r);if($("reminderList"))renderReminders();}}
-const LIFEFLOW_PRO_CHECKOUT="https://khanzada.lemonsqueezy.com/checkout/buy/c166d2c4-c91b-4556-b740-37d2136cdd3c";
-async function refreshPlanStatus(){const title=$("planStatus"),detail=$("planDetail");if(!title||!detail)return;if(!user){title.textContent="Sign in to check your plan";detail.textContent="Sign in to see your LifeFlow subscription status.";return;}const r=await db.from("subscriptions").select("status,renews_at,ends_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(10);if(r.error){title.textContent="Unable to check plan";detail.textContent="Your account is signed in, but subscription status could not be loaded.";console.error("subscription status",r.error);return;}const rows=r.data||[];const pro=rows.find(x=>["active","on_trial"].includes(String(x.status||"").toLowerCase())&&(!x.ends_at||new Date(x.ends_at)>new Date()));if(pro){title.textContent="LifeFlow Pro — Active";detail.textContent=pro.renews_at?"Your subscription is active. Next renewal: "+new Date(pro.renews_at).toLocaleDateString():"Your subscription is active.";return;}title.textContent="LifeFlow Free";detail.textContent=rows.length?"No active Pro subscription was found for this account.":"No subscription is linked to this account yet.";}
+async function refreshPlanStatus(){const title=$("planStatus"),detail=$("planDetail");if(!title||!detail)return;if(!user){title.textContent="Sign in to check your plan";detail.textContent="Sign in to see your LifeFlow subscription status.";return;}const r=await db.from("subscriptions").select("provider,status,renews_at,ends_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(10);if(r.error){title.textContent="Unable to check plan";detail.textContent="Your account is signed in, but subscription status could not be loaded.";console.error("subscription status",r.error);return;}const rows=r.data||[];const pro=rows.find(x=>x.provider==="polar"&&["active","on_trial"].includes(String(x.status||"").toLowerCase())&&(!x.ends_at||new Date(x.ends_at)>new Date()));if(pro){title.textContent="LifeFlow Pro — Active";detail.textContent=pro.renews_at?"Your subscription is active. Next renewal: "+new Date(pro.renews_at).toLocaleDateString():"Your subscription is active.";return;}title.textContent="LifeFlow Free";detail.textContent=rows.length?"No active Pro subscription was found for this account.":"No subscription is linked to this account yet.";}
 function showUpgrade(open=true){const b=$("upgradeBox");if(b)b.style.display=open?"block":"none";}
-function upgradeToPro(){if(!user){msg("Please sign in before upgrading to Pro.");return;}const url=LIFEFLOW_PRO_CHECKOUT+"?checkout[custom][user_id]="+encodeURIComponent(user.id);window.open(url,"_blank","noopener,noreferrer");}
+async function upgradeToPro(){
+  if(!user){msg("Please sign in before upgrading to Pro.");return;}
+  if(!db){msg("LifeFlow is still loading. Please try again.");return;}
+  const sessionResult=await db.auth.getSession();
+  const accessToken=sessionResult.data?.session?.access_token;
+  if(sessionResult.error||!accessToken){msg("Please sign in again before upgrading.");return;}
+  msg("Preparing secure Polar checkout...");
+  const result=await db.functions.invoke("lifeflow-polar-checkout",{
+    body:{},
+    headers:{Authorization:"Bearer "+accessToken}
+  });
+  if(result.error){console.error("Polar checkout error",result.error);msg("Checkout is not ready yet. Please try again later.");return;}
+  if(!result.data?.url){msg(result.data?.error||"Unable to create checkout. Please try again later.");return;}
+  window.location.assign(result.data.url);
+}
 
 function analytics(){const t=data.tasks||[],e=data.expenses||[],g=data.goals||[],h=data.habits||[];const done=t.filter(x=>x.completed||x.done||x.status==="done").length;const spent=e.reduce((s,x)=>s+Number(x.amount||0),0);$("aTasks").innerHTML=t.length+" total · <b>"+done+" done</b>";$("aMoney").innerHTML="<b>"+spent.toLocaleString(undefined,{maximumFractionDigits:2})+"</b> total recorded";$("aGoals").innerHTML=g.length+" active goals";$("aHabits").innerHTML=h.length+" habits tracked";$("aAdvice").textContent= t.length&&done<t.length ? "Finish one pending task today before adding more. Small wins keep LifeFlow moving." : g.length ? "Review one goal and define the next concrete action." : "Add your first goal so LifeFlow can help you build momentum.";}
 
