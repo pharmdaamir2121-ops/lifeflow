@@ -60,7 +60,16 @@ async function upgradeToPro(){
     body:{},
     headers:{Authorization:"Bearer "+accessToken}
   });
-  if(result.error){console.error("Polar checkout error",result.error);msg("Checkout is not ready yet. Please try again later.");return;}
+  if(result.error){
+    console.error("Polar checkout error",result.error);
+    let detail="";
+    try{
+      const body=await result.error.context?.json();
+      detail=body?.details||body?.error||body?.message||"";
+    }catch(_){}
+    msg(detail?"Checkout setup issue: "+String(detail).slice(0,220):"Checkout is not ready yet. Please check your connection and try again.");
+    return;
+  }
   if(!result.data?.url){msg(result.data?.error||"Unable to create checkout. Please try again later.");return;}
   window.location.assign(result.data.url);
 }
