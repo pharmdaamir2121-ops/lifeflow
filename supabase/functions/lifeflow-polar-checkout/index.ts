@@ -60,7 +60,20 @@ Deno.serve(async (req) => {
     const result = await checkoutResponse.json().catch(() => ({}));
     if (!checkoutResponse.ok || !result?.url) {
       console.error("Polar checkout creation failed", checkoutResponse.status, result);
-      return json({ error: "Could not start checkout. Please try again later." }, 502);
+      const detailValue =
+        (typeof result?.detail === "string" && result.detail) ||
+        (typeof result?.message === "string" && result.message) ||
+        (typeof result?.error === "string" && result.error) ||
+        (typeof result?.error_description === "string" && result.error_description) ||
+        (Array.isArray(result?.detail)
+          ? result.detail.map((x: any) => typeof x?.msg === "string" ? x.msg : "").filter(Boolean).join("; ")
+          : "");
+      const details = String(detailValue || "Polar did not return a checkout URL.").slice(0, 400);
+      return json({
+        error: "Polar checkout request failed.",
+        details,
+        polar_status: checkoutResponse.status
+      }, 502);
     }
 
     return json({ url: result.url });
