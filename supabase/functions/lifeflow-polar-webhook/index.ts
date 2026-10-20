@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
   const webhookSecret = Deno.env.get("POLAR_WEBHOOK_SECRET");
   const serviceKey = Deno.env.get("LIFEFLOW_SERVICE_ROLE_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const expectedProductId = "2bf38fc1-3ad8-489b-aa7b-c2166a2fb372";
+  const expectedProductId = "f838240b-f18f-44dc-8917-82c4ccb6853b";
 
   if (!webhookSecret || !serviceKey || !supabaseUrl) {
     console.error("Polar webhook configuration is missing a required secret or Supabase URL.");
