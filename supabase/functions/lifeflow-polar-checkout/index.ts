@@ -49,7 +49,9 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         products: [productId],
-        currency: "usd",
+prices: {
+  [productId]: [{ price_currency: "usd", price_amount: 499, recurring_interval: "month" }]
+},
         external_customer_id: user.id,
         customer_email: user.email || undefined,
         success_url: APP_URL + "?billing=success&checkout_id={CHECKOUT_ID}",
