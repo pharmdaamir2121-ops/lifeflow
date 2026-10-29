@@ -38,7 +38,7 @@ async function signup(){
     msg(result.data?.session?"Account created successfully.":"Account created. Check your email to confirm.");
   }catch(e){msg("Signup error: "+(e&&e.message?e.message:String(e)));}
 }
-async function logout(){if(db)await db.auth.signOut();location.reload();}
+async function logout(){if(db){const result=await db.auth.signOut({scope:"local"});if(result?.error){msg("Sign-out error: "+result.error.message);return;}}location.reload();}
 function page(p){document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));$(p).classList.add("on");render();if(p==="reminders")renderReminders();if(p==="pro")showUpgrade(false);if(p==="analytics")analytics();}
 function getReminders(){try{return JSON.parse(localStorage.getItem(REM_KEY)||"[]")}catch(e){return[]}}
 function saveReminders(x){localStorage.setItem(REM_KEY,JSON.stringify(x))}
@@ -132,7 +132,7 @@ async function start(){
     if(r.error){msg("Session error: "+r.error.message);return;}
     user=r.data?.session?.user||null;
     if(user){showApp();await load();}else showAuth();
-    db.auth.onAuthStateChange((event,session)=>{if(session?.user){user=session.user;showApp();setTimeout(()=>{load().catch(e=>console.error("LifeFlow refresh error:",e));},0);return;}if(event==="SIGNED_OUT"){user=null;showAuth();}});
+    db.auth.onAuthStateChange((event,session)=>{if(session?.user){user=session.user;showApp();setTimeout(()=>{load().catch(e=>console.error("LifeFlow refresh error:",e));},0);return;}if(event==="SIGNED_OUT"){user=null;showAuth();msg("Your login session ended in Supabase. This can happen if another session replaces it or its refresh token is rejected. Please sign in again.");}});
   }catch(e){msg("Startup error: "+(e&&e.message?e.message:String(e)));}
 }
 window.addEventListener("DOMContentLoaded",()=>{
