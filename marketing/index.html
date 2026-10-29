@@ -1,1 +1,69 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LifeFlow — One place for your life</title><style>body{font:16px system-ui;margin:0;background:#f7f8fc;color:#111827}.w{max-width:980px;margin:auto;padding:24px}.hero{text-align:center;padding:90px 10px}.hero h1{font-size:clamp(42px,7vw,72px);margin:0 0 20px}.hero p{font-size:20px;color:#64748b}.btn{display:inline-block;padding:13px 20px;background:#635bff;color:white;border-radius:12px;text-decoration:none;font-weight:700}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.c{background:white;border:1px solid #e5e7eb;border-radius:18px;padding:24px}@media(max-width:700px){.g{grid-template-columns:1fr}}</style></head><body><div class="w"><b>Life<span style="color:#635bff">Flow</span></b><section class="hero"><h1>Your life. One simple command center.</h1><p>Tasks, spending, goals and habits in one focused dashboard.</p><a class="btn" href="../app/index.html">Try LifeFlow free →</a></section><div class="g"><div class="c"><h2>✓ Tasks</h2><p>Keep important work visible.</p></div><div class="c"><h2>💰 Money</h2><p>Track everyday spending.</p></div><div class="c"><h2>🎯 Goals & habits</h2><p>Build progress that lasts.</p></div></div></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#635bff">
+<meta name="description" content="LifeFlow brings daily tasks, expenses, goals, and habits into one simple dashboard. Start free.">
+<title>LifeFlow — Your daily command center</title>
+<style>
+:root{color-scheme:light;--ink:#111827;--muted:#596579;--line:#e5e7eb;--brand:#635bff;--soft:#f5f6ff}
+*{box-sizing:border-box}body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:#fff}
+a{color:var(--brand)}.wrap{max-width:1060px;margin:auto;padding:0 22px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0}
+.logo{font-size:22px;font-weight:850;letter-spacing:-.5px}.logo span{color:var(--brand)}
+header nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}header nav a{text-decoration:none;color:var(--muted)}
+.hero{padding:74px 0 66px;text-align:center;background:linear-gradient(180deg,#f5f6ff 0%,#fff 100%);border-radius:28px;margin:12px 0 42px}
+.eyebrow{display:inline-block;background:#e9e8ff;color:#4438ca;font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px}
+h1{font-size:clamp(38px,7vw,68px);line-height:1.08;letter-spacing:-2px;max-width:800px;margin:22px auto 18px}
+.lead{max-width:680px;margin:0 auto;color:var(--muted);font-size:clamp(17px,2.6vw,21px)}
+.actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-block;border-radius:12px;padding:13px 20px;text-decoration:none;font-weight:750}.btn-primary{background:var(--brand);color:#fff;box-shadow:0 8px 20px #635bff2b}.btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+h2{font-size:30px;letter-spacing:-.8px;line-height:1.2;margin:0 0 10px}.section-intro{color:var(--muted);margin:0 0 22px}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 52px}
+.card{border:1px solid var(--line);border-radius:18px;padding:22px;background:#fff}.emoji{font-size:26px}.card h3{margin:10px 0 5px}.card p{color:var(--muted);font-size:14px;margin:0}
+.pricing{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 54px}.price{font-size:33px;font-weight:850;letter-spacing:-1px}.price small{font-size:15px;font-weight:500;color:var(--muted);letter-spacing:0}
+.price-card{border:1px solid var(--line);border-radius:20px;padding:25px}.price-card.featured{border:2px solid var(--brand);background:#fafaff}.price-card ul{padding-left:20px;color:var(--muted);font-size:14px}.price-card li{margin:6px 0}
+footer{border-top:1px solid var(--line);padding:26px 0 34px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:13px}footer nav{display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--muted)}
+@media(max-width:760px){.features{grid-template-columns:repeat(2,1fr)}.hero{padding:52px 15px}.pricing{grid-template-columns:1fr}header nav{gap:10px}}
+@media(max-width:430px){.features{grid-template-columns:1fr}h1{letter-spacing:-1px}.wrap{padding:0 16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a class="logo" href="./" style="color:var(--ink);text-decoration:none">Life<span>Flow</span></a><nav><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="./../app/privacy.html">Privacy</a></nav></header>
+<main>
+<section class="hero">
+<span class="eyebrow">A simpler way to stay organized</span>
+<h1>Your life. One simple command center.</h1>
+<p class="lead">Keep daily tasks, everyday spending, goals, and habits together in one focused dashboard.</p>
+<div class="actions"><a class="btn btn-primary" href="../app/index.html">Try LifeFlow free →</a><a class="btn btn-secondary" href="#features">Explore features</a></div>
+<p class="note">Start with the free features. No payment needed to try the app.</p>
+</section>
+<section id="features">
+<h2>Keep the important things in view</h2>
+<p class="section-intro">Simple tools for daily planning and personal progress.</p>
+<div class="features">
+<article class="card"><div class="emoji">✓</div><h3>Tasks</h3><p>Keep your next steps visible and mark tasks as you finish them.</p></article>
+<article class="card"><div class="emoji">💰</div><h3>Money</h3><p>Record everyday spending and see totals in one place.</p></article>
+<article class="card"><div class="emoji">🎯</div><h3>Goals</h3><p>Write down what you want to work toward and keep it visible.</p></article>
+<article class="card"><div class="emoji">🔥</div><h3>Habits</h3><p>Track the routines you want to practice consistently.</p></article>
+</div>
+</section>
+<section id="pricing">
+<h2>Simple pricing</h2>
+<p class="section-intro">Begin free, then upgrade only if Pro insights are useful to you.</p>
+<div class="pricing">
+<article class="price-card"><h3>Free</h3><div class="price">$0 <small>/ always free to start</small></div><ul><li>Tasks, Money, Goals and Habits</li><li>Daily dashboard and basic coach</li><li>Personal reminders</li></ul><a class="btn btn-secondary" href="../app/index.html">Start free</a></article>
+<article class="price-card featured"><h3>LifeFlow Pro</h3><div class="price">$4.99 <small>USD / month</small></div><ul><li>Advanced insights from your saved data</li><li>Detailed task and spending analytics</li><li>Secure checkout handled by Polar</li><li>Monthly subscription; renews until canceled</li></ul><a class="btn btn-primary" href="../app/index.html">View Pro in LifeFlow →</a><p class="note">The exact price and billing terms will be shown again at checkout. Please check them before paying.</p></article>
+</div>
+</section>
+<section class="card" style="margin-bottom:42px;text-align:center;background:var(--soft)">
+<h2>Ready to bring your day into focus?</h2><p class="section-intro">Try LifeFlow with sample data first. You can explore the free features without buying Pro.</p><a class="btn btn-primary" href="../app/index.html">Open LifeFlow →</a>
+</section>
+</main>
+<footer><span>© 2026 LifeFlow</span><nav><a href="../app/privacy.html">Privacy Policy</a><a href="../app/terms.html">Terms</a><a href="../app/delete-account.html">Account deletion</a><a href="mailto:pharmdaamir2121@gmail.com">Support</a></nav></footer>
+</div>
+</body>
+</html>
