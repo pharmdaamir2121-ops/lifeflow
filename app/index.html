@@ -127,7 +127,7 @@ function render(){let spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0),do
 async function start(){
   try{
     if(typeof supabase==="undefined"){msg("LifeFlow could not load its authentication service. Refresh once.");return;}
-    db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
     const r=await db.auth.getSession();
     if(r.error){msg("Session error: "+r.error.message);return;}
     user=r.data?.session?.user||null;
